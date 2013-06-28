@@ -76,7 +76,7 @@ var packageSingleFile = function(options, files, callback) {
     };
 
     var ccOpts = {
-        compilation_level: 'ADVANCED_OPTIMIZATIONS',
+        compilation_level: 'SIMPLE_OPTIMIZATIONS',
         generate_exports: true,
         output_wrapper:  "\"(function() {%output%})();\""
     };
