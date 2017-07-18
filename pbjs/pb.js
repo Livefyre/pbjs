@@ -9,6 +9,19 @@ var rimraf = require('rimraf');
 var mkdirp = require('mkdirp');
 
 
+var debug = function () {
+  if (!process.env.DEBUG) return
+  function getErrorObject(){
+    try { throw Error('') } catch(err) { return err; }
+  }
+
+  var err = getErrorObject();
+  var caller_line = err.stack.split("\n")[4];
+  var index = caller_line.indexOf("at ");
+  var clean = caller_line.slice(index+2, caller_line.length);
+  console.log(clean, arguments)
+}
+
 /**
  * @constructor
  */
@@ -107,7 +120,7 @@ PBJS.Task._toOutputTarget = function (root, jsNamespace, protoFile) {
   pathSpec.push(fileName);
 
   var outputTarget = path.join.apply(path, pathSpec);
-  // console.log(root, jsNamespace, protoFile.toString(), '->', outputTarget);
+  debug(root, jsNamespace, protoFile.toString(), '->', outputTarget);
   return outputTarget;
 };
 
@@ -172,7 +185,7 @@ PBJS.Task._setJsDefault = function (field, type) {
     field.jsDefault_ = JSON.stringify(dfault.val);
   }
 
-  // console.log(field.jsDefault_);
+  debug(field.jsDefault_);
 };
 
 PBJS.Task._setGroupTypes = function (group) {
@@ -223,7 +236,7 @@ PBJS.Task._registerProvidedTypes = function (item, provides, seenJsTypes) {
     if (child instanceof Parser.Extend) {
       return; // TODO(gregp): handle extend
     }
-    // console.log(child.toString());
+    debug(child.toString());
     if (child instanceof Parser.Enum ||
         child instanceof Parser.Message ||
         child instanceof Parser.Group) {
@@ -248,7 +261,7 @@ PBJS.Task._registerProvidedTypes = function (item, provides, seenJsTypes) {
     if (child instanceof Parser.Message) {
       PBJS.Task._registerProvidedTypes(child, provides, seenJsTypes);
     }
-    // console.log(child.groups);
+    debug(child.groups);
   });
 };
 
@@ -258,7 +271,7 @@ PBJS.Task.prototype.build = function () {
   var provides = [];
   var seenJsTypes = {};
   PBJS.Task._registerProvidedTypes(this.protoFile, provides, seenJsTypes);
-  // console.log(provides);
+  debug(provides);
 
   // Get all the requirements, by looking at the type of every provide's fields
   var requires = [];
@@ -266,7 +279,7 @@ PBJS.Task.prototype.build = function () {
     var item = provide.item;
     if (!item.fields) {
       // Done with this provide, no field types that might be required.
-      // console.log('No Fields:', item.toString());
+      debug('No Fields:', item.toString());
       return;
     }
 
@@ -302,7 +315,7 @@ PBJS.Task.prototype.build = function () {
     });
   });
 
-  // console.log(this.toString(), requires);
+  debug(this.toString(), requires);
   this.data.requires = requires;
   this.data.provides = provides;
   this.data.inputPath = this.inputPath;
@@ -321,6 +334,7 @@ PBJS.Task.prototype.build = function () {
  */
 PBJS.prototype._fileSetToTaskMap = function (fileSet, cb) {
   var template = this.templates.pbjs.message;
+  debug("Template", template);
   var root = this.outputRoot;
   var key;
   var result = {};
@@ -334,7 +348,7 @@ PBJS.prototype._fileSetToTaskMap = function (fileSet, cb) {
     while (result[path]) {
       ++i;
       path = task.outputTarget + '_' + i;
-      // console.log('checking path ' + path);
+      debug('checking path ' + path);
     }
     task.outputPath = path + '.pb.js';
 

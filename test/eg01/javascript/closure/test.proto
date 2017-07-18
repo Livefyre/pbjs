@@ -66,3 +66,43 @@ message TestAllTypes {
   repeated NestedMessage repeated_nested_message  = 48;
   repeated NestedEnum    repeated_nested_enum     = 49;
 }
+
+enum TopLevelEnum {
+  A = 1;
+  B = 2;
+}
+
+message TestOptionType {
+  enum TestMessageOptionEnum {
+    A = 1;
+    B = 2;
+  }
+
+  optional string str = 1;
+  optional TestMessageOptionEnum enum_ = 2;
+}
+
+extend google.protobuf.MessageOptions {
+    optional TestOptionType testMessageOption = 11010;
+    optional string testStringOption = 11011;
+}
+
+extend google.protobuf.FieldOptions {
+    optional TestOptionType testMessageOption = 11010;
+    optional string testStringOption = 11011;
+}
+
+
+
+message TestMessageOptions {
+  option (testStringOption) = "hello";
+  option (TestMessageOption) = {str: "hello", enum_: A};
+}
+
+
+message TestFieldOptions {
+  repeated string f = 1 [
+			 (testMessageOption) = { str: "str", enum_: A }
+			 ];
+
+}

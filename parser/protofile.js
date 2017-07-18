@@ -31,6 +31,12 @@ var ProtoFile = function(data) {
   this.messages = [];
 
   /**
+   * Enums defined directly at the top level of the .proto file.
+   * @type {!Array.<Enum>}
+   */
+  this.enums = [];
+
+  /**
    * Items (messages, services, ...etc?) accessible by their names.
    * It is legal to have two messages in one file with the same name
    *  if they are on different parents.
@@ -89,11 +95,22 @@ ProtoFile.prototype.register = function (item) {
   if (item instanceof Message) {
     var name = item.name;
     if (this.byName[name]) {
-      throw new ValidationError('Duplicate message with name ' + name
+      throw new ValidationError('Duplicate message/enum with name ' + name
         + ' detected in file ' + this.path);
     }
     this.byName[name] = item;
     this.messages.push(item);
+    item.parent = this;
+    return;
+  }
+  if (item instanceof Enum) {
+    var name = item.name;
+    if (this.byName[name]) {
+      throw new ValidationError('Duplicate message/enum with name ' + name
+        + ' detected in file ' + this.path);
+    }
+    this.byName[name] = item;
+    this.enums.push(item);
     item.parent = this;
     return;
   }
@@ -123,9 +140,6 @@ ProtoFile.prototype.register = function (item) {
   }
   if (item instanceof Field) {
     throw new ValidationError('Cannot have a field in a protobuf top level.');
-  }
-  if (item instanceof Enum) {
-    throw new ValidationError('Cannot have a raw enum in a protobuf file.');
   }
   DescriptorItem.prototype.register.call(this, item);
 };

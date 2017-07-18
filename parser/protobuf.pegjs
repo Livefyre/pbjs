@@ -66,6 +66,7 @@ PROTO_FILE_STATEMENT
   = FILE_JS_DOC
   / FILE_DIRECTIVE
   / MESSAGE
+  / ENUM
   / EXTEND
   / JS_DOC
   ////
@@ -252,11 +253,10 @@ MESSAGE_OPTION
   = _ "option"
     _ key:MESSAGE_OPTION_KEY
     _ "="
-    _ val:LITERAL
+    _ val:(MESSAGE_OPTION_ENUM / LITERAL)
     _ ";"
     _
   {
-    // TODO(gregp): handle non-literal (enum) values
     var result = new Option({
       key: key,
       value: val,
@@ -264,6 +264,28 @@ MESSAGE_OPTION
     });
     return result;
   }
+
+MESSAGE_OPTION_ENUM
+  = _ "{"
+    _ start:(i:MESSAGE_OPTION_ENUM_VALUE " "* "," " "* {return i;})*
+    _ last:MESSAGE_OPTION_ENUM_VALUE
+    _ "}"
+   { return start.concat(last); }
+
+
+MESSAGE_OPTION_ENUM_VALUE
+  = _ key:IDENTIFIER
+    _ ":"
+    _ val:(FIELD_DEFAULT_LITERAL / FIELD_DEFAULT_ENUM)
+  {
+    var result = new Option({
+      key: key,
+      value: val,
+      // TODO(gregp): split ref vs. val
+    });
+    return result;
+  }
+
 
 MESSAGE_OPTION_KEY
   = BUILTIN_MESSAGE_OPTION_KEYWORD / CUSTOM_OPTION
@@ -362,7 +384,7 @@ MSG_FIELD_OPTION
   = _ "["
     _ key:MESSAGE_OPTION_KEY
     _ "="
-    _ val:LITERAL
+    _ val:(MESSAGE_OPTION_ENUM / LITERAL)
     _ "]"
     _
   {
